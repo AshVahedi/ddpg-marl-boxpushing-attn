@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 import os
-
+import seaborn as sns
 os.environ['KMP_DUPLICATE_LIB_OK'] = 'True'  # Optional fallback
 
 import matplotlib
@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 
 class PolicyEvaluator:
-    def __init__(self, env_class, actor, device, action_bounds):
+    def __init__(self, env_class, actor,critic, device, action_bounds):
         """
         Parameters:
         - env_class: class reference (not instance), e.g., UnicycleGoalEnv
@@ -22,6 +22,7 @@ class PolicyEvaluator:
         """
         self.env_class = env_class
         self.actor = actor
+        self.critic =critic
         self.device = device
         self.action_bounds = action_bounds
         self.env_size =env_class().env_size
@@ -52,9 +53,53 @@ class PolicyEvaluator:
             state_tensor = torch.FloatTensor(state).unsqueeze(0).to(self.device)
             with torch.no_grad():
                 action = self.actor(state_tensor).cpu().numpy().flatten()
-
             state, reward, done,goal_reached,box_reached = env.step(action)
             if printer:
+                action_tensor =torch.FloatTensor(action).unsqueeze(0).to(self.device)
+
+                token, attn_out, attn_weights, q_val = self.critic(state_tensor, action_tensor, printer)
+               
+                # Move tensors to CPU and convert to numpy
+                token_np = token.squeeze(0).detach().numpy()      # shape [N+2, D]
+                attn_np = attn_out.squeeze(0).detach().numpy()    # shape [N+2, D]
+
+
+
+                # Plot and save heatmaps
+                if step %10 ==0:
+                    plt.figure(figsize=(6, 4))
+                    sns.heatmap(token_np, cmap="viridis", cbar=True)
+                    plt.title(f"Token Embeddings (Step {step})")
+                    plt.xlabel("Embedding Dimension")
+                    plt.ylabel("Token Index")
+                    plt.tight_layout()
+                    plt.savefig(f"heatmaps/token_step_{step:03d}.png")
+                    plt.close()
+
+
+                    # Select single-head, single-batch attention weights
+                    attn_matrix = attn_weights[0, 0].cpu().numpy()  # shape [tokens, tokens]
+
+                    plt.figure(figsize=(5, 4))
+                    sns.heatmap(attn_matrix, cmap="coolwarm", annot=False, square=True)
+                    plt.title(f"Attention Matrix (Step {step})")
+                    plt.xlabel("Key tokens")
+                    plt.ylabel("Query tokens")
+                    plt.tight_layout()
+                    plt.savefig(f"heatmaps/attn_matrix_step_{step:03d}.png")
+                    plt.close()
+
+
+
+
+                    plt.figure(figsize=(6, 4))
+                    sns.heatmap(attn_np, cmap="viridis", cbar=True)
+                    plt.title(f"Attention Output (Step {step})")
+                    plt.xlabel("Embedding Dimension")
+                    plt.ylabel("Token Index")
+                    plt.tight_layout()
+                    plt.savefig(f"heatmaps/attn_out_step_{step:03d}.png")
+                    plt.close()
                 print(f"Step {step:3d} | Network Output: {action}")
             
             
@@ -87,10 +132,13 @@ class PolicyEvaluator:
         env_size = self.env_size
         os.makedirs(save_dir, exist_ok=True)
         actor_name =f"actor_{episode}.pth"
+        critic_name = f"critic_{episode}.pth"
         plot_name = f"trajectory_{episode}.png"
         # Save actor
         actor_path = os.path.join(save_dir, actor_name)
+        critic_path = os.path.join(save_dir,critic_name)
         torch.save(self.actor.state_dict(), actor_path)
+        torch.save(self.critic.state_dict(),critic_path)
 
         # Save trajectory plot
         fig, ax = plt.subplots(figsize=(6, 6))

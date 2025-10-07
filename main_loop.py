@@ -27,7 +27,7 @@ def set_seed(seed=42):
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = False
 
-set_seed(57)  # or any fixed integer
+set_seed(44)  # or any fixed integer
 
 # Hyperparameters
 
@@ -53,7 +53,7 @@ buffer = ReplayBuffer(buffer_capacity)
 noise = OUNoise(action_dim)
 # evaluator initialization
 decay_rate =0.9999  
-embeded_length=8
+embeded_length=16
 # Training
 
     # Optimizers
@@ -64,7 +64,7 @@ target_actor = Actor(obs_dim, action_dim).to(device)
 target_critic = AttentionCritic(num_agents,embed_dim =embeded_length).to(device)
 target_actor.load_state_dict(actor.state_dict())
 target_critic.load_state_dict(critic.state_dict())
-evaluator = PolicyEvaluator(UnicyclePushBoxEnv, actor, device, action_bounds)
+evaluator = PolicyEvaluator(UnicyclePushBoxEnv, actor, critic, device, action_bounds)
 
 actor_opt = torch.optim.Adam(actor.parameters(), lr=lr)
 critic_opt = torch.optim.Adam(critic.parameters(), lr=lr)
