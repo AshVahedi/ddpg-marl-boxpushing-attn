@@ -130,9 +130,9 @@ Our results, averaged across seven random seeds, showed that the attention criti
 
 | Framework | Convergence (Episodes) | Smoothness | Robustness |
 |------------|------------------------|-------------|-------------|
-| Baseline Critic | ~3700 | ⚪⚪⚪⚫⚫ | ⚪⚪⚪⚫⚫ |
-| Extended Baseline Critic | ~6700 | ⚪⚪⚪⚪⚪ | ⚪⚪⚫⚫⚫ |
-| Attention-Based Critic | ~1200 | ⚪⚪⚪⚪⚪ | ⚪⚪⚪⚪⚫ |
+| Baseline Critic | ~3700 | ⚪⚪⚪⚪⚫⚫⚫ | ⚪⚪⚪⚪⚪⚫⚫ |
+| Extended Baseline Critic | ~6700 | ⚪⚪⚪⚪⚪⚪⚪ | ⚪⚪⚫⚫⚫⚫⚫ |
+| Attention-Based Critic | ~1200 | ⚪⚪⚪⚪⚪⚪⚪ | ⚪⚪⚪⚪⚪⚪⚫ |
 
 </div>
 
