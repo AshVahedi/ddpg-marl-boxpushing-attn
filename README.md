@@ -30,8 +30,9 @@ Each agent is modeled as a unicycle robot with two continuous control outputs: a
 | Agent | ($x, y, \alpha, F, ω$) | Position, orientation, and action |
 | Box | ($x_b, y_b, \alpha_b$) or ($p_b,\alpha_b$)| Center position and rotation |
 | Goal | ($x_G, Y_G$) | Position of the Goal |
-
-![Box game_image](Docs/box_game.jpg)
+<p align="center">
+  <img src="Docs/box_game.jpg" width="45%"/>
+</p>
 
 The equation of motion for the agents before attaching to the box is:
 
@@ -110,7 +111,7 @@ h
 ## Algorithm Overview
 
 <p align="center">
-  <img src="Docs/algorithm_Overview_attn.jpg" width="55%"/>
+  <img src="Docs/algorithm_Overview_attn.jpg" width="50%"/>
   <img src="Docs/algorithm_Overview_noattn.jpg" width="40%"/>
 </p>
 
