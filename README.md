@@ -3,7 +3,6 @@ Multi-agent box-pushing using DDPG with attention-based critic and actor archite
 
 ### Multi-Agent Reinforcement Learning with Attention-based Centralized Critic
 
-![Box Pushing Animation]()
 
 <p align="center">
   <img src="Docs/Animation_Attention_network.gif" width="45%"/>
@@ -30,6 +29,7 @@ Each agent is modeled as a unicycle robot with two continuous control outputs: a
 | Agent | ($x, y, \alpha, F, ω$) | Position, orientation, and action |
 | Box | ($x_b, y_b, \alpha_b$) or ($p_b,\alpha_b$)| Center position and rotation |
 | Goal | ($x_G, Y_G$) | Position of the Goal |
+
 <p align="center">
   <img src="Docs/box_game.jpg" width="45%"/>
 </p>
