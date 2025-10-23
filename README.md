@@ -106,9 +106,9 @@ r_p + r_h, & \text{if in Phase 2 (Pushing)}
 \end{cases}
 \end{align}
 $$
-h
+
 ---
-## Algorithm Overview
+## 🧠 Algorithm Overview
 
 Learning in our framework follows a centralized actor and centralized critic paradigm. Figure below is a depiction of our framework in two different setups. The actor network is shared across agents and receives full state information during execution, enabling globally informed action selection. We implement three variants of the critic: vaseline critic, extended baseline critic (baseline critic that gets more information from environment) another uses a self-attention mechanism over structured input tokens (agent states, actions, goal, and box information) This allows for a controlled investigation into the role of attention in the critic while keeping the actor architecture and policy identical across both settings.
 
@@ -120,6 +120,8 @@ Learning in our framework follows a centralized actor and centralized critic par
 
 ---
 ## 📈 Results
+
+Our results, averaged across seven random seeds, showed that the attention critic led to significantly faster convergence and produced the most reasonable trajectories during both the reaching and pushing phases. Furthermore, the attention framework exhibited lower variance in convergence behavior, suggesting more reliable training. These findings highlight the benefit of incorporating structured inter-agent modeling even within centralized critics, especially in continuous control domains that combine coordination and cooperation.
 
 | Framework | Convergence (Episodes) | Smoothness | Robustness |
 |------------|------------------------|-------------|-------------|
