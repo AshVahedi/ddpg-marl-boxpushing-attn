@@ -28,13 +28,15 @@ Each agent is modeled as a unicycle robot with two continuous control outputs: a
 | Goal | ($x_G, Y_G$) | Position of the Goal |
 
 
-
 $$
+\begin{aligned}
 \dot{x}_i &= v_i \cos(\beta_i) \\
 \dot{y}_i &= v_i \sin(\beta_i) \\
 \dot{\beta}_i &= \alpha_i \\
 \dot{v}_i &= \frac{f_i - \mu_a v_i}{m}
+\end{aligned}
 $$
+
 - Both agents and box motion are integrated using **RK4**.
 - Once an agent reaches the box, it “sticks” and starts pushing.
 - Rewards are **staged**:
