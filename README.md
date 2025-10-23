@@ -27,7 +27,9 @@ Each agent is modeled as a unicycle robot with two continuous control outputs: a
 | Box | ($x_b, y_b, \alpha_b$) or ($p_b,\alpha_b$)| Center position and rotation |
 | Goal | ($x_G, Y_G$) | Position of the Goal |
 
+![Box game_image](Docs/box_game.jpg)
 
+The equation of motion for the agents before attaching to the box is:
 $$
 \begin{aligned}
 \dot{x}_i &= v_i \cos(\beta_i) \\
@@ -37,6 +39,16 @@ $$
 \end{aligned}
 $$
 
+and the equation of motion after agents are attached to the box is:
+
+$$
+\begin{aligned}
+\dot{\vec{v}}_b &= \frac{\vec{f_b} - \mu_b \vec{v}_b}{M} \\
+\dot{\vec{p}}_b &= \vec{v}_b \\
+\dot{\omega}_b &= \frac{\tau - \mu_r \omega_b}{I} \\
+\dot{\beta}_b &= \omega_b
+\end{aligned}
+$$
 - Both agents and box motion are integrated using **RK4**.
 - Once an agent reaches the box, it “sticks” and starts pushing.
 - Rewards are **staged**:
