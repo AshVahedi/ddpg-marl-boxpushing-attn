@@ -7,22 +7,37 @@ Multi-agent box-pushing using DDPG with attention-based critic and actor archite
 
 
 ## 🚀 Overview
-This project implements a **Deep Deterministic Policy Gradient (DDPG)** framework for a **multi-agent unicycle system** that learns to cooperatively push a box toward a goal in a continuous 2D environment.
-
+In this work, we investigate the role of attention within a centralized critic in a cooperative continuous-space task involving both coordination and physical interaction.
+A detailed 2D two-phase box-pushing environment is developed using second-order unicycle agents, torque-based dynamics, and a two-phase cooperative objective.
+Within the Deep Deterministic Policy Learning framework, we compare three actor–critic systems: a standard baseline critic, an extended critic with additional environmental information, and an attention critic.
+All setups employ the same actor trained to handle both task phases.
+Results show that only the attention-based critic achieves reliable convergence and efficient phase transitions, demonstrating that attention is structurally required when a single critic must represent multiple task contexts.
 The system uses:
 - **Runge-Kutta 4th Order (RK4)** dynamics
 - **Friction & inertia modeling**
 - **Attention-based centralized critic** for cooperative learning
 ---
 ## ⚙️ Environment Dynamics
+Each agent is modeled as a unicycle robot with two continuous control outputs: a forward force and a steering angle. These controls respect non-holonomic constraints, requiring agents to rotate gradually to reorient. Figure below is an illustration of the game indicating the agents $r_i, i=1,2$ moving in the direction of their velocities $v_i$, taking the input force  $f_i\$ with the steering angle $alpha_i$ to push the box $b$ toward the goal $G$. 
+
 
 | Entity | Variables | Description |
 |--------|------------|--------------|
-| Agent | (x, y, θ) | Position and orientation |
-| Box | (x_b, y_b, θ_b) | Center position and rotation |
-| Control | (F, ω) | Force and steering angular velocity |
+| Agent | ($x, y, \alpha, F, ω$) | Position, orientation, and action |
+| Box | ($x_b, y_b, \alpha_b$) or ($p_b,\alpha_b$)| Center position and rotation |
+| Goal | ($x_G, Y_G$) | Position of the Goal |
 
-- Both agent and box motion are integrated using **RK4**.
+
+$$
+\begin{aligned}
+\dot{x}_i &= v_i \cos(\beta_i) \\
+\dot{y}_i &= v_i \sin(\beta_i) \\
+\dot{\beta}_i &= \alpha_i \\
+\dot{v}_i &= \frac{f_i - \mu_a v_i}{m}
+\end{aligned}
+$$
+
+- Both agents and box motion are integrated using **RK4**.
 - Once an agent reaches the box, it “sticks” and starts pushing.
 - Rewards are **staged**:
   - **Phase 1:** Reach the box (terminal reward)
