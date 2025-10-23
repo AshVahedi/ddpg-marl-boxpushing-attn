@@ -55,6 +55,7 @@ $$
 - Once an agent reaches the box, it “sticks” and starts pushing.
 - Rewards are **staged**:
   - **Phase 1:** Reach the box (terminal reward)
+
 $$
 \begin{align}
 r_{\text{t}} &= 
@@ -100,6 +101,15 @@ r_p + r_h, & \text{if in Phase 2 (Pushing)}
 \end{cases}
 \end{align}
 $$
+h
+---
+## Algorithm Overview
+
+<p align="center">
+  <img src="Docs/algorithm_Overview_attn.jpg" width="45%"/>
+  <img src="Docs/algorithm_Overview_noattn.jpg" width="45%"/>
+</p>
+
 
 
 ---
