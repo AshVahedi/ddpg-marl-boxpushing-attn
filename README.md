@@ -23,10 +23,18 @@ Each agent is modeled as a unicycle robot with two continuous control outputs: a
 
 | Entity | Variables | Description |
 |--------|------------|--------------|
-| Agent | ($x, y, θ, F, ω$) | Position, orientation, and action |
-| Box | (x_b, y_b, θ_b) | Center position and rotation |
-| Goal | (X_G, Y_G ) | Position of the Goal |
+| Agent | ($x, y, \alpha, F, ω$) | Position, orientation, and action |
+| Box | ($x_b, y_b, \alpha_b$) or ($p_b,\alpha_b$)| Center position and rotation |
+| Goal | ($x_G, Y_G$) | Position of the Goal |
 
+
+
+$$
+\dot{x}_i &= v_i \cos(\beta_i) \\
+\dot{y}_i &= v_i \sin(\beta_i) \\
+\dot{\beta}_i &= \alpha_i \\
+\dot{v}_i &= \frac{f_i - \mu_a v_i}{m}
+$$
 - Both agents and box motion are integrated using **RK4**.
 - Once an agent reaches the box, it “sticks” and starts pushing.
 - Rewards are **staged**:
