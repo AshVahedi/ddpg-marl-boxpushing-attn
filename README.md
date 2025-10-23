@@ -18,6 +18,8 @@ The system uses:
 - **Attention-based centralized critic** for cooperative learning
 ---
 ## ⚙️ Environment Dynamics
+Each agent is modeled as a unicycle robot with two continuous control outputs: a forward force and a steering angle. These controls respect non-holonomic constraints, requiring agents to rotate gradually to reorient. Figure below is an illustration of the game indicating the agents $r_i, i=1,2 $ moving in the direction of their velocities $ v_i$, taking the input force  $ f_i\$ with the steering angle $alpha_i$ to push the box $b$ toward the goal $G$. 
+
 
 | Entity | Variables | Description |
 |--------|------------|--------------|
