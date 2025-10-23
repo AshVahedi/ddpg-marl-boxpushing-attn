@@ -18,11 +18,11 @@ The system uses:
 
 | Entity | Variables | Description |
 |--------|------------|--------------|
-| Agent | (x, y, θ) | Position and orientation |
+| Agent | (x, y, θ, F, ω) | Position, orientation, and action |
 | Box | (x_b, y_b, θ_b) | Center position and rotation |
-| Control | (F, ω) | Force and steering angular velocity |
+| Goal | (X_G, Y_G ) | Position of the Goal |
 
-- Both agent and box motion are integrated using **RK4**.
+- Both agents and box motion are integrated using **RK4**.
 - Once an agent reaches the box, it “sticks” and starts pushing.
 - Rewards are **staged**:
   - **Phase 1:** Reach the box (terminal reward)
