@@ -55,10 +55,6 @@ $$
 - Once an agent reaches the box, it “sticks” and starts pushing.
 - Rewards are **staged**:
   - **Phase 1:** Reach the box (terminal reward)
-  - **Phase 2:** Push box toward goal (instantaneous reward)
-
-phase 1 reward:
-
 $$
 \begin{align}
 r_{\text{t}} &= 
@@ -78,6 +74,22 @@ r_v &= \min(0, 0.1 \cdot v_i) \text{ penalizing backward movement}
 \end{align} 
 $$
 
+  - **Phase 2:** Push box toward goal (instantaneous reward)
+
+$$
+\begin{align}
+r_p &= -\ 0.01 \cdot \omega_b 
+\ +\ \frac{1}{1 + d}\nonumber  \text{d is the euclidian distance between the box and the goal}
+\end{align}
+$$
+
+$$
+
+\begin{align}
+r_h &= -5 , & \text{if the box hits a wall}\nonumber 
+\end{align}
+
+$$
 
 ---
 ## 📈 Results
