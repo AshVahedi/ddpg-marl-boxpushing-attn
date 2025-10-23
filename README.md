@@ -23,7 +23,7 @@ Each agent is modeled as a unicycle robot with two continuous control outputs: a
 
 | Entity | Variables | Description |
 |--------|------------|--------------|
-| Agent | (x, y, θ, F, ω) | Position, orientation, and action |
+| Agent | ($x, y, θ, F, ω$) | Position, orientation, and action |
 | Box | (x_b, y_b, θ_b) | Center position and rotation |
 | Goal | (X_G, Y_G ) | Position of the Goal |
 
