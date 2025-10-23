@@ -110,11 +110,12 @@ h
 ---
 ## Algorithm Overview
 
+Learning in our framework follows a centralized actor and centralized critic paradigm. Figure below is a depiction of our framework in two different setups. The actor network is shared across agents and receives full state information during execution, enabling globally informed action selection. We implement three variants of the critic: vaseline critic, extended baseline critic (baseline critic that gets more information from environment) another uses a self-attention mechanism over structured input tokens (agent states, actions, goal, and box information) This allows for a controlled investigation into the role of attention in the critic while keeping the actor architecture and policy identical across both settings.
+
 <p align="center">
-  <img src="Docs/algorithm_Overview_attn.jpg" width="50%"/>
+  <img src="Docs/algorithm_Overview_attn.jpg" width="48%"/>
   <img src="Docs/algorithm_Overview_noattn.jpg" width="40%"/>
 </p>
-
 
 
 ---
