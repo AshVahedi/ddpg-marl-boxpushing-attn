@@ -30,6 +30,7 @@ Each agent is modeled as a unicycle robot with two continuous control outputs: a
 ![Box game_image](Docs/box_game.jpg)
 
 The equation of motion for the agents before attaching to the box is:
+
 $$
 \begin{aligned}
 \dot{x}_i &= v_i \cos(\beta_i) \\
@@ -49,11 +50,34 @@ $$
 \dot{\beta}_b &= \omega_b
 \end{aligned}
 $$
+
 - Both agents and box motion are integrated using **RK4**.
 - Once an agent reaches the box, it “sticks” and starts pushing.
 - Rewards are **staged**:
   - **Phase 1:** Reach the box (terminal reward)
   - **Phase 2:** Push box toward goal (instantaneous reward)
+
+phase 1 reward:
+
+$$
+\begin{align}
+r_{\text{t}} &= 
+\begin{cases}
++15, & \text{if the agent reaches the box} \\
+-5, & \text{if the agent hits the left wall} \\
+-3, & \text{if the agent hits any other wall}
+\end{cases} 
+\nonumber 
+\end{align}
+$$
+
+$$
+\begin{align}
+r_v &= \min(0, 0.1 \cdot v_i) \text{ penalizing backward movement}
+\nonumber 
+\end{align} 
+$$
+
 
 ---
 ## 📈 Results
