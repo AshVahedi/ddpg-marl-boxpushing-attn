@@ -79,17 +79,28 @@ $$
 $$
 \begin{align}
 r_p &= -\ 0.01 \cdot \omega_b 
-\ +\ \frac{1}{1 + d}\nonumber  \text{d is the euclidian distance between the box and the goal}
+\ +\ \frac{1}{1 + d}\nonumber  \quad \text{d is the euclidian distance between the box and the goal}
 \end{align}
 $$
 
 $$
-
 \begin{align}
-r_h &= -5 , & \text{if the box hits a wall}\nonumber 
+r_h &= -5 , & \text{if the box hits a wall} \nonumber 
 \end{align}
+$$
+
+So the general form of rewward is:
 
 $$
+\begin{align}
+r = 
+\begin{cases}
+r_t + r_v, & \text{if in Phase 1 (Reaching)} \\
+r_p + r_h, & \text{if in Phase 2 (Pushing)}
+\end{cases}
+\end{align}
+$$
+
 
 ---
 ## 📈 Results
