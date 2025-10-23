@@ -7,8 +7,11 @@ Multi-agent box-pushing using DDPG with attention-based critic and actor archite
 
 
 ## 🚀 Overview
-This project implements a **Deep Deterministic Policy Gradient (DDPG)** framework for a **multi-agent unicycle system** that learns to cooperatively push a box toward a goal in a continuous 2D environment.
-
+In this work, we investigate the role of attention within a centralized critic in a cooperative continuous-space task involving both coordination and physical interaction.
+A detailed 2D two-phase box-pushing environment is developed using second-order unicycle agents, torque-based dynamics, and a two-phase cooperative objective.
+Within the Deep Deterministic Policy Learning framework, we compare three actor–critic systems: a standard baseline critic, an extended critic with additional environmental information, and an attention critic.
+All setups employ the same actor trained to handle both task phases.
+Results show that only the attention-based critic achieves reliable convergence and efficient phase transitions, demonstrating that attention is structurally required when a single critic must represent multiple task contexts.
 The system uses:
 - **Runge-Kutta 4th Order (RK4)** dynamics
 - **Friction & inertia modeling**
