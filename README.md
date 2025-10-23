@@ -23,12 +23,16 @@ The system uses:
 ## ⚙️ Environment Dynamics
 Each agent is modeled as a unicycle robot with two continuous control outputs: a forward force and a steering angle. These controls respect non-holonomic constraints, requiring agents to rotate gradually to reorient. Figure below is an illustration of the game indicating the agents $r_i, i=1,2$ moving in the direction of their velocities $v_i$, taking the input force  $f_i\$ with the steering angle $alpha_i$ to push the box $b$ toward the goal $G$. 
 
+<div align="center">
 
 | Entity | Variables | Description |
 |--------|------------|--------------|
-| Agent | ($x, y, \alpha, F, ω$) | Position, orientation, and action |
-| Box | ($x_b, y_b, \alpha_b$) or ($p_b,\alpha_b$)| Center position and rotation |
-| Goal | ($x_G, Y_G$) | Position of the Goal |
+| Agent | ($x, y, \alpha, \omega, F$) | Position, orientation, and action |
+| Box | ($x_b, y_b, \alpha_b$) or ($p_b,\alpha_b$) | Center position and rotation |
+| Goal | ($x_G, y_G$) | Position of the goal |
+
+</div>
+
 
 <p align="center">
   <img src="Docs/box_game.jpg" width="45%"/>
@@ -123,10 +127,14 @@ Learning in our framework follows a centralized actor and centralized critic par
 
 Our results, averaged across seven random seeds, showed that the attention critic led to significantly faster convergence and produced the most reasonable trajectories during both the reaching and pushing phases. Furthermore, the attention framework exhibited lower variance in convergence behavior, suggesting more reliable training. These findings highlight the benefit of incorporating structured inter-agent modeling even within centralized critics, especially in continuous control domains that combine coordination and cooperation.
 
+<div align="center">
+
 | Framework | Convergence (Episodes) | Smoothness | Robustness |
 |------------|------------------------|-------------|-------------|
 | Baseline Critic | ~3700 | ⚪⚪⚪⚫⚫ | ⚪⚪⚪⚫⚫ |
 | Extended Baseline Critic | ~6700 | ⚪⚪⚪⚪⚪ | ⚪⚪⚫⚫⚫ |
 | Attention-Based Critic | ~1200 | ⚪⚪⚪⚪⚪ | ⚪⚪⚪⚪⚫ |
+
+</div>
 
 ---
