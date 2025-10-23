@@ -3,7 +3,7 @@ Multi-agent box-pushing using DDPG with attention-based critic and actor archite
 
 ### Multi-Agent Reinforcement Learning with Attention-based Centralized Critic
 
-![Box Pushing Animation](docs/Animation_Attention_network.gif)
+![Box Pushing Animation](Docs/Animation_Attention_network.gif)
 
 
 ## 📈 Results
