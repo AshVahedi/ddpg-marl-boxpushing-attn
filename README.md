@@ -98,7 +98,7 @@ r_h &= -5 , & \text{if the box hits a wall} \nonumber
 \end{align}
 $$
 
-So the general form of rewward is:
+So the general form of reward is:
 
 $$
 \begin{align}
