@@ -55,8 +55,16 @@ class PolicyEvaluator:
                 action = self.actor(state_tensor).cpu().numpy().flatten()
             state, reward, done,goal_reached,box_reached = env.step(action)
             if printer:
-                action_tensor =torch.FloatTensor(action).unsqueeze(0).to(self.device)
+                with torch.no_grad():
+                    action,a1,a2 = self.actor(state_tensor,printer)
+                    action = action.cpu().numpy().flatten()
 
+                # Convert tensor to NumPy (CPU first)
+                a1_np = a1.cpu().numpy()  # Shape: [64, 24]
+                a2_np = a2.cpu().numpy()  # Shape: [64, 24]
+
+                action_tensor =torch.FloatTensor(action).unsqueeze(0).to(self.device)
+                
                 token, attn_out, attn_weights, q_val = self.critic(state_tensor, action_tensor, printer)
                
                 # Move tensors to CPU and convert to numpy
@@ -67,6 +75,7 @@ class PolicyEvaluator:
 
                 # Plot and save heatmaps
                 if step %10 ==0:
+                    #heatmap plot of tokens
                     plt.figure(figsize=(6, 4))
                     sns.heatmap(token_np, cmap="viridis", cbar=True)
                     plt.title(f"Token Embeddings (Step {step})")
@@ -79,7 +88,7 @@ class PolicyEvaluator:
 
                     # Select single-head, single-batch attention weights
                     attn_matrix = attn_weights[0, 0].cpu().numpy()  # shape [tokens, tokens]
-
+                    #heatmap plot of attention matrix
                     plt.figure(figsize=(5, 4))
                     sns.heatmap(attn_matrix, cmap="coolwarm", annot=False, square=True)
                     plt.title(f"Attention Matrix (Step {step})")
@@ -91,7 +100,7 @@ class PolicyEvaluator:
 
 
 
-
+                    #heatmap plot of tokens after attention
                     plt.figure(figsize=(6, 4))
                     sns.heatmap(attn_np, cmap="viridis", cbar=True)
                     plt.title(f"Attention Output (Step {step})")
@@ -99,6 +108,27 @@ class PolicyEvaluator:
                     plt.ylabel("Token Index")
                     plt.tight_layout()
                     plt.savefig(f"heatmaps/attn_out_step_{step:03d}.png")
+                    plt.close()
+
+                    
+                    # Heatmap for first hidden layer
+                    plt.figure(figsize=(10, 6))
+                    sns.heatmap(a1_np, cmap="viridis", cbar=True)
+                    plt.title("Heatmap of First Hidden Layer Activations (Actor)")
+                    plt.xlabel("Neurons")
+                    plt.ylabel("Samples")
+                    plt.tight_layout()
+                    plt.savefig(f"heatmaps/a1_{step:03d}.png")
+                    plt.close()
+                    
+                    # Heatmap for second hidden layer
+                    plt.figure(figsize=(10, 6))
+                    sns.heatmap(a2_np, cmap="viridis", cbar=True)
+                    plt.title("Heatmap of Second Hidden Layer Activations (Actor)")
+                    plt.xlabel("Neurons")
+                    plt.ylabel("Samples")
+                    plt.tight_layout()
+                    plt.savefig(f"heatmaps/a2_{step:03d}.png")
                     plt.close()
                 print(f"Step {step:3d} | Network Output: {action}")
             

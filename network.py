@@ -31,17 +31,20 @@ class CustomTransformerEncoderLayer(nn.TransformerEncoderLayer):
 class Actor(nn.Module):
     def __init__(self, state_dim, action_dim, hidden_dim=24):
         super().__init__()
-        self.net = nn.Sequential(
-            nn.Linear(state_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, hidden_dim),
-            nn.ReLU(),
-            nn.Linear(hidden_dim, action_dim),
-            nn.Tanh()  # Assumes actions are in [-1, 1]
-        )
+        self.fc1 = nn.Linear(state_dim, hidden_dim)
+        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
+        self.out = nn.Linear(hidden_dim, action_dim)
+        self.relu = nn.ReLU()
+        self.tanh = nn.Tanh()
 
-    def forward(self, state):
-        return self.net(state)
+    def forward(self, state,printer =0):
+        a1 = self.relu(self.fc1(state))  # First hidden layer activations
+        a2 = self.relu(self.fc2(a1))     # Second hidden layer activations
+        out = self.tanh(self.out(a2))    # Output (actions)
+        if printer: 
+            return out, a1, a2
+        else:
+            return out
 
 class Critic(nn.Module):
     def __init__(self, state_dim, action_dim, hidden_dim=64):

@@ -100,17 +100,17 @@ def training_loop(env,buffer,noise,evaluator,
         sigma *=sigma_decay_rate
         trajectories, box_start_and_end, box_positions, box_theta, goal_reached ,box_reached= evaluator.evaluate(max_steps,printer =0)
         # Flatten the weight matrix
-        if episode%100 ==0:
+#        if episode%100 ==0:
         # Flatten the weight matrix
-            flat_weights = actor.net[4].weight.view(-1)
+    #        flat_weights = actor.net[4].weight.view(-1)
 
             # Pick weights at indices 5, 8, 12, 19
-            indices = 5
-            w1 = flat_weights[indices]
-
-            # Optional: convert to NumPy
-            w1 = w1.detach().cpu().numpy()
-            w.append(w1)
+#            indices = 5
+ #           w1 = flat_weights[indices]
+#
+ #           # Optional: convert to NumPy
+  #          w1 = w1.detach().cpu().numpy()
+   #         w.append(w1)
         
 
 
@@ -143,4 +143,4 @@ def training_loop(env,buffer,noise,evaluator,
             print("learning completed. There is nothing to add")
             break
 
-    return  w
+    return  0
