@@ -1,9 +1,11 @@
 # ddpg-marl-boxpushing-attn
-Multi-agent box-pushing using DDPG with attention-based critic and actor architectures.
 
 ### Multi-Agent Reinforcement Learning with Attention-based Centralized Critic
 
-![Box Pushing Animation](Docs/Animation_Attention_network.gif)
+
+<p align="center">
+  <img src="Docs/Animation_Attention_network.gif" width="45%"/>
+</p>
 
 
 ## 🚀 Overview
@@ -20,14 +22,20 @@ The system uses:
 ## ⚙️ Environment Dynamics
 Each agent is modeled as a unicycle robot with two continuous control outputs: a forward force and a steering angle. These controls respect non-holonomic constraints, requiring agents to rotate gradually to reorient. Figure below is an illustration of the game indicating the agents $r_i, i=1,2$ moving in the direction of their velocities $v_i$, taking the input force  $f_i\$ with the steering angle $alpha_i$ to push the box $b$ toward the goal $G$. 
 
+<div align="center">
 
 | Entity | Variables | Description |
 |--------|------------|--------------|
-| Agent | ($x, y, \alpha, F, ω$) | Position, orientation, and action |
-| Box | ($x_b, y_b, \alpha_b$) or ($p_b,\alpha_b$)| Center position and rotation |
-| Goal | ($x_G, Y_G$) | Position of the Goal |
+| Agent | ($x, y, \beta, \alpha, F$) | Position, orientation, and action |
+| Box | ($x_b, y_b, \beta_b$) or ($p_b,\beta_b$) | Center position and rotation |
+| Goal | ($x_G, y_G$) | Position of the goal |
 
-![Box game_image](Docs/box_game.jpg)
+</div>
+
+
+<p align="center">
+  <img src="Docs/box_game.jpg" width="45%"/>
+</p>
 
 The equation of motion for the agents before attaching to the box is:
 
@@ -90,7 +98,7 @@ r_h &= -5 , & \text{if the box hits a wall} \nonumber
 \end{align}
 $$
 
-So the general form of rewward is:
+So the general form of reward is:
 
 $$
 \begin{align}
@@ -101,24 +109,31 @@ r_p + r_h, & \text{if in Phase 2 (Pushing)}
 \end{cases}
 \end{align}
 $$
-h
+
 ---
-## Algorithm Overview
+## 🧠 Algorithm Overview
+
+Learning in our framework follows a centralized actor and centralized critic paradigm. Figure below is a depiction of our framework in two different setups. The actor network is shared across agents and receives full state information during execution, enabling globally informed action selection. We implement three variants of the critic: vaseline critic, extended baseline critic (baseline critic that gets more information from environment) another uses a self-attention mechanism over structured input tokens (agent states, actions, goal, and box information) This allows for a controlled investigation into the role of attention in the critic while keeping the actor architecture and policy identical across both settings.
 
 <p align="center">
-  <img src="Docs/algorithm_Overview_attn.jpg" width="45%"/>
-  <img src="Docs/algorithm_Overview_noattn.jpg" width="45%"/>
+  <img src="Docs/algorithm_Overview_attn.jpg" width="48%"/>
+  <img src="Docs/algorithm_Overview_noattn.jpg" width="40%"/>
 </p>
-
 
 
 ---
 ## 📈 Results
 
+Our results, averaged across seven random seeds, showed that the attention critic led to significantly faster convergence and produced the most reasonable trajectories during both the reaching and pushing phases. Furthermore, the attention framework exhibited lower variance in convergence behavior, suggesting more reliable training. These findings highlight the benefit of incorporating structured inter-agent modeling even within centralized critics, especially in continuous control domains that combine coordination and cooperation.
+
+<div align="center">
+
 | Framework | Convergence (Episodes) | Smoothness | Robustness |
 |------------|------------------------|-------------|-------------|
-| Baseline Critic | ~3700 | ⚪⚪⚪⚫⚫ | ⚪⚪⚪⚫⚫ |
-| Extended Baseline Critic | ~6700 | ⚪⚪⚪⚪⚪ | ⚪⚪⚫⚫⚫ |
-| Attention-Based Critic | ~1200 | ⚪⚪⚪⚪⚪ | ⚪⚪⚪⚪⚫ |
+| Baseline Critic | ~3700 | ⚪⚪⚪⚪⚫⚫⚫ | ⚪⚪⚪⚪⚪⚫⚫ |
+| Extended Baseline Critic | ~6700 | ⚪⚪⚪⚪⚪⚪⚪ | ⚪⚪⚫⚫⚫⚫⚫ |
+| Attention-Based Critic | ~1200 | ⚪⚪⚪⚪⚪⚪⚪ | ⚪⚪⚪⚪⚪⚪⚫ |
+
+</div>
 
 ---
