@@ -30,7 +30,7 @@ def training_loop(env,buffer,noise,evaluator,
     done_once = False
     start_steps = 500# minimum number of samples required for starting the game
     w=[]
-
+    goal = torch.as_tensor(env.goal, dtype=torch.float32, device=device)
     print("model: centralized actor, centralized attentaion-based critic")
     print(f"Params: Tau:{tau}, Gamma:{gamma}, Starting Sigma:{sigma}, Sigma DR:{sigma_decay_rate}, NumAgents:{num_agents}, TokenLengths:{emb}")
     params_to_animate=[tau,gamma,sigma,sigma_decay_rate,num_agents,emb]
@@ -75,15 +75,20 @@ def training_loop(env,buffer,noise,evaluator,
 
                 with torch.no_grad():
                     next_actions = target_actor(s2)
-                    q_target = r + gamma * (1 - d) * target_critic(s2, next_actions)
+                    q_next, _ = target_critic(
+                                                s2,
+                                                next_actions,
+                                                goal)
+                    q_target = r + gamma * (1 - d) * q_next
 
-                q_val = critic(s, a)
+                q_val , _ = critic(s, a,goal)
                 critic_loss = torch.nn.functional.mse_loss(q_val, q_target)
                 critic_opt.zero_grad()
                 critic_loss.backward()
                 critic_opt.step()
 
-                actor_loss = -critic(s, actor(s)).mean()
+                q_critic,_ = critic(s, actor(s),goal)
+                actor_loss = -q_critic.mean()
                 actor_opt.zero_grad()
                 actor_loss.backward()
                 actor_opt.step()
