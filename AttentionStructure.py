@@ -20,7 +20,9 @@ class Critic(nn.Module):
         self.net = nn.Sequential(
             nn.Linear(embed_dim, hidden_dim),
             nn.ReLU(),
-            nn.Linear(hidden_dim, 1)
+            nn.Linear(hidden_dim, hidden_dim),
+            nn.ReLU(),
+            nn.Linear(hidden_dim,1)
         )
     def forward(self,x):
         return self.net(x)
