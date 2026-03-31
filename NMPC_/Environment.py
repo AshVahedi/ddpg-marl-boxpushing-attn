@@ -175,6 +175,8 @@ class UnicyclePushBoxEnv:
         def f(state, action):
             x, y, theta, v = state
             force, omega = action
+            force = force.item()
+            omega = omega.item()
             acc = (force - friction_coeff * v) / mass 
             dx = v * np.cos(theta)
             dy = v * np.sin(theta)
@@ -263,8 +265,10 @@ class UnicyclePushBoxEnv:
         for i in range(self.num_agents):
             if self.mode == "RL":
                 force = actions[2*i] * self.agent_force_max + self.agent_force_offset
+                omega = actions[2*i+1] * self.agent_omega_max
             else:  # NMPC
                 force = np.clip(actions[2*i], 0, self.agent_force_max)
+                omega =  np.clip(actions[2*i+1],-self.agent_omega_max,  self.agent_omega_max)
 
             if not self.attached[i]:
                 current_state_agent = np.array([
@@ -284,7 +288,7 @@ class UnicyclePushBoxEnv:
                 min_dist = min(dists)
                 if  not self.box_reached[i] and min_dist < self.contact_threshold:
                     self.attached[i] = 1
-                    self.box_reached[i] = 1
+                    self.box_reached[i] = True
                     self.agent_attachment_dis[i] = self.agent_pos[i] - self.box_pos
                     reward += self.terminal_reward 
 
@@ -333,7 +337,7 @@ class UnicyclePushBoxEnv:
         if self.step_count >= self.max_steps:
             done = True
 
-        return self.get_full_state(), done, self.goal_reached, self.box_reached
+        return self.get_full_state(), done, self.goal_reached, self.box_reached[0]
 
     def plot_current(self,trajectory=0):
         plt.figure(figsize=(6,6))
