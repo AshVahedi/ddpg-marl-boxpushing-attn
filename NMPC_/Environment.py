@@ -47,7 +47,7 @@ class UnicyclePushBoxEnv:
         self.agent_radius = agent_radius
         self.box_size = np.array(box_size)
         self.env_size = 40.0
-        self.goal = np.array([35.0, 35.0])
+        self.goal = np.array([35.0, 15.0])
 
         self.agent_mass = 1.0
         self.agent_friction = 4.5
@@ -193,46 +193,81 @@ class UnicyclePushBoxEnv:
         next_state [3] =  max(0,next_state[3])
         return next_state
 
-    def _box_dynamics(self, pos, vel, theta, omega, force_vec, torque):
-        '''
-            pos: box's CoM position
-            vel: box's CoM velocity
-            theta:box's orientation
-            omega: box's angular velocity
-            force_vec: [force_x , force_y] applied to the box
-            agent_pos: agent's position 
-        '''
-       
-        m = self.box_mass   
-        mu = self.box_friction_linear
-        mu_rot = self.box_friction_rotary
-        I = self.box_inertia
-
-        def linear_acc(v, F):
-            return (F - mu * v) / m
-
-        def angular_acc(w, tau):
-            return (tau - mu_rot * w) / I
-
-        # RK4 for linear motion
-        k1_v = self.dt * linear_acc(vel, force_vec)
-        k2_v = self.dt * linear_acc(vel + 0.5 * k1_v, force_vec)
-        k3_v = self.dt * linear_acc(vel + 0.5 * k2_v, force_vec)
-        k4_v = self.dt * linear_acc(vel + k3_v, force_vec)
-        new_vel = vel + (k1_v + 2 * k2_v + 2 * k3_v + k4_v) / 6
-        new_pos = pos + self.dt * new_vel
-
-        # RK4 for angular motion
-        k1_w = self.dt * angular_acc(omega, torque)
-        k2_w = self.dt * angular_acc(omega + 0.5 * k1_w, torque)
-        k3_w = self.dt * angular_acc(omega + 0.5 * k2_w, torque)
-        k4_w = self.dt * angular_acc(omega + k3_w, torque)
-        new_omega = omega + (k1_w + 2 * k2_w + 2 * k3_w + k4_w) / 6
-        new_theta = self._normalize_angle(theta + self.dt * new_omega)
-
-        return new_pos, new_vel, new_theta, new_omega
+    def _box_dynamics(self, x, u, r_local):
+        """
+        x = [x_b, y_b, theta_b, vbx, vby, omega_b, theta_a]
+        u = [f, omega_a]
+        """
+        
+        xb, yb, theta_b, vbx, vby, omega_b, theta_a = x
+        f, omega_a = u
 
 
+        # --- Force direction ---
+    # --- Force direction ---
+        Fx = f * np.cos(theta_a)
+        Fy = f * np.sin(theta_a)
+
+        # --- Rotate attachment vector ---
+        R = np.array([
+            [np.cos(theta_b), -np.sin(theta_b)],
+            [np.sin(theta_b),  np.cos(theta_b)]
+        ])
+
+        r = R @ r_local
+
+        # --- Torque ---
+        torque = r[0] * Fy - r[1] * Fx
+
+        # --- Dynamics ---
+        dx_b = vbx
+        dy_b = vby
+        dtheta_b = omega_b
+
+        dvbx = (Fx - self.box_friction_linear * vbx) / self.box_mass
+        dvby = (Fy - self.box_friction_linear * vby) / self.box_mass
+        
+        domega_b = (torque - self.box_friction_rotary * omega_b) / self.box_inertia
+
+        dtheta_a = omega_a
+
+        return np.array([
+            dx_b, dy_b, dtheta_b,
+            dvbx, dvby, domega_b,
+            dtheta_a
+        ])
+    
+    def _rk4_step_phase2(self, x, u, r_local):
+        """
+        RK4 discretization for Phase 2
+        """
+
+        dt = self.dt
+
+        k1 = self._dynamics_phase2(x, u, r_local)
+        k2 = self._dynamics_phase2(x + 0.5 * dt * k1, u, r_local)
+        k3 = self._dynamics_phase2(x + 0.5 * dt * k2, u, r_local)
+        k4 = self._dynamics_phase2(x + dt * k3, u, r_local)
+
+        x_next = x + (dt / 6.0) * (k1 + 2*k2 + 2*k3 + k4)
+
+        # --- wrap angles ---
+        x_next[2] = self._normalize_angle(x_next[2])   # box angle
+        x_next[6] = self._normalize_angle(x_next[6])   # agent heading
+
+        # --- velocity clamp ---
+        v_max = 5.0  # you can define this if needed
+        x_next[3] = np.clip(x_next[3], -v_max, v_max)
+        x_next[4] = np.clip(x_next[4], -v_max, v_max)
+
+        # --- angular clamp (optional) ---
+        x_next[5] = np.clip(x_next[5], -10.0, 10.0)
+
+        # --- workspace clamp ---
+        x_next[0:2] = np.clip(x_next[0:2], 0.0, self.env_size)
+
+        return x_next
+        
     def _distance_to_box(self):
         ''' finds the min distance between agent and 
         the known points of the box ( mid points and corners)'''
@@ -290,11 +325,17 @@ class UnicyclePushBoxEnv:
                     self.attached[i] = 1
                     self.box_reached[i] = True
                     self.agent_attachment_dis[i] = self.agent_pos[i] - self.box_pos
-                    reward += self.terminal_reward 
-
+                    r_local = self.agent_attachment_dis[0]
+                    
             else:
                 # Attached agent applies force
-
+                current_state_agent= np.array([
+                    *self.box_pos,
+                    self.box_theta,
+                    *self.box_vel,
+                    self.agent_theta
+                ])
+                
                 direction = np.array([np.cos(self.agent_theta[i]), np.sin(self.agent_theta[i])])
 
 

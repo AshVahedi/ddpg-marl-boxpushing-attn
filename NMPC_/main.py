@@ -1,5 +1,5 @@
 import numpy as np
-from costfunction import phase1_cost
+from costfunction import phase1_cost, _compute_p_ref
 
 from optimizerfunction import solve_phase1_nmpc
 from Environment import UnicyclePushBoxEnv
@@ -151,12 +151,14 @@ while  not box_reached and step <=max_step:
                                 ell,
                                 weights,
                                 params)
+    p_ref = _compute_p_ref(env.box_pos,env.goal,ell)
     u_apply = u[0]
     states, done, goal_reached, box_reached = env.step(u_apply)
     
     s.append(states.copy()) 
     u_prev = u_apply
     step +=1
+
 
 
 X = np.array(s).T   # shape (10, L)
