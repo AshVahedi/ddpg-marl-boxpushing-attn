@@ -130,3 +130,47 @@ def phase1_cost(U_flat, x0, box_pos, goal_pos, u_prev, N, dt, ell, weights, para
     )
 
     return J
+
+def phase2_cost(U_flat, x0, goal, u_prev, N, dt, weights, params, r_local):
+    """
+    Phase 2 NMPC cost (pushing)
+
+    x0: [x_b, y_b, theta_b, vbx, vby, omega_b, theta_a]
+    U_flat: flattened control sequence (2N,)
+    """
+
+    U = U_flat.reshape(N, 2)
+
+    x = x0.copy()
+    J = 0.0
+
+    for k in range(N):
+
+        u = U[k]
+
+        # --- box position ---
+        box_pos = x[0:2]
+
+        # --- tracking cost ---
+        e = box_pos - goal
+        J += weights["w_pos"] * np.dot(e, e)
+
+        # --- control effort ---
+        J += weights["w_f"] * (u[0]**2)
+        J += weights["w_omega"] * (u[1]**2)
+
+        # --- smoothness ---
+        du = u - u_prev
+        J += weights["w_df"] * (du[0]**2)
+        J += weights["w_domega"] * (du[1]**2)
+
+        # --- rollout ---
+        x = rk4_step_phase2(x, u, dt, params, r_local)
+
+        u_prev = u
+
+    # --- terminal cost ---
+    e_terminal = x[0:2] - goal
+    J += weights["w_pos_f"] * np.dot(e_terminal, e_terminal)
+
+    return float(J)

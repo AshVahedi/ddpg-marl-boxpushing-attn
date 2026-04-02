@@ -1,7 +1,7 @@
 import numpy as np
-from costfunction import phase1_cost, _compute_p_ref
+from costfunction import phase1_cost, _compute_p_ref, phase2_cost
 
-from optimizerfunction import solve_phase1_nmpc
+from optimizerfunction import solve_phase1_nmpc,solve_phase2_nmpc
 from Environment import UnicyclePushBoxEnv
 
 import matplotlib.pyplot as plt
@@ -114,7 +114,7 @@ max_step = 500
 N=15
 ell = 2.5
 
-weights = {
+weights_phase1 = {
     "w_p": 10.0,
     "w_theta": 5.0,
     "w_v": 0.5,
@@ -130,6 +130,14 @@ weights = {
     "w_v_f": 1.0
 }
 
+weights_phase2 = {
+    "w_pos": 20.0,
+    "w_f": 0.1,
+    "w_omega": 0.1,
+    "w_df": 0.5,
+    "w_domega": 0.5,
+    "w_pos_f": 50.0
+}
 
 env.reset()
 states = env.get_full_state()
@@ -149,7 +157,7 @@ while  not box_reached and step <=max_step:
                                 N,
                                 params["dt"],
                                 ell,
-                                weights,
+                                weights_phase1,
                                 params)
     p_ref = _compute_p_ref(env.box_pos,env.goal,ell)
     u_apply = u[0]

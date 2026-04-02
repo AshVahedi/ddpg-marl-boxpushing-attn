@@ -204,15 +204,11 @@ class UnicyclePushBoxEnv:
 
 
         # --- Force direction ---
-    # --- Force direction ---
         Fx = f * np.cos(theta_a)
         Fy = f * np.sin(theta_a)
 
         # --- Rotate attachment vector ---
-        R = np.array([
-            [np.cos(theta_b), -np.sin(theta_b)],
-            [np.sin(theta_b),  np.cos(theta_b)]
-        ])
+        R = self.box_rotation_matrix
 
         r = R @ r_local
 
@@ -233,8 +229,8 @@ class UnicyclePushBoxEnv:
 
         return np.array([
             dx_b, dy_b, dtheta_b,
-            dvbx, dvby, domega_b,
-            dtheta_a
+            dvbx.item(), dvby.item(), domega_b.item(),
+            dtheta_a.item()
         ])
     
     def _rk4_step_phase2(self, x, u, r_local):
@@ -244,10 +240,10 @@ class UnicyclePushBoxEnv:
 
         dt = self.dt
 
-        k1 = self._dynamics_phase2(x, u, r_local)
-        k2 = self._dynamics_phase2(x + 0.5 * dt * k1, u, r_local)
-        k3 = self._dynamics_phase2(x + 0.5 * dt * k2, u, r_local)
-        k4 = self._dynamics_phase2(x + dt * k3, u, r_local)
+        k1 = self._box_dynamics(x, u, r_local)
+        k2 = self._box_dynamics(x + 0.5 * dt * k1, u, r_local)
+        k3 = self._box_dynamics(x + 0.5 * dt * k2, u, r_local)
+        k4 = self._box_dynamics(x + dt * k3, u, r_local)
 
         x_next = x + (dt / 6.0) * (k1 + 2*k2 + 2*k3 + k4)
 
@@ -256,7 +252,7 @@ class UnicyclePushBoxEnv:
         x_next[6] = self._normalize_angle(x_next[6])   # agent heading
 
         # --- velocity clamp ---
-        v_max = 5.0  # you can define this if needed
+        v_max = 5.0  
         x_next[3] = np.clip(x_next[3], -v_max, v_max)
         x_next[4] = np.clip(x_next[4], -v_max, v_max)
 
@@ -325,56 +321,47 @@ class UnicyclePushBoxEnv:
                     self.attached[i] = 1
                     self.box_reached[i] = True
                     self.agent_attachment_dis[i] = self.agent_pos[i] - self.box_pos
-                    r_local = self.agent_attachment_dis[0]
+                    # --- Attachment vector (fixed) ---
+                    r_local = self.agent_attachment_dis[i]
                     
             else:
-                # Attached agent applies force
-                current_state_agent= np.array([
-                    *self.box_pos,
+                # --- Freeze agent velocity ---
+                self.agent_vel[i] = 0.0
+
+                # --- Build Phase 2 state ---
+                x = np.array([
+                    self.box_pos[0],
+                    self.box_pos[1],
                     self.box_theta,
-                    *self.box_vel,
-                    self.agent_theta
+                    self.box_vel[0],
+                    self.box_vel[1],
+                    self.box_omega,
+                    self.agent_theta[i]
                 ])
+
+                # --- Control ---
+                u = np.array([force, omega])
                 
-                direction = np.array([np.cos(self.agent_theta[i]), np.sin(self.agent_theta[i])])
+                # --- Attachment vector (fixed) ---
+                r_local = self.agent_attachment_dis[i]
 
+                # --- RK4 update ---
+                x_next = self._rk4_step_phase2(x, u, r_local)
 
-                # force_vec = force * direction
-                # attach_world = self.box_pos + R_box @ self.agent_attachment_dis[i]
-                # torque_arm = attach_world - self.box_pos
-                # torque = torque_arm[0] * force_vec[1] - torque_arm[1] * force_vec[0]
+                # --- Write back box state ---
+                self.box_pos = x_next[0:2]
+                self.box_theta = self._normalize_angle(x_next[2])
+                self.box_vel = x_next[3:5]
+                self.box_omega = x_next[5]
 
-                # total_force += force_vec
-                # total_torque += torque
-                # self.agent_vel[i]= 0 # freeze the agent
-        # Update box dynamics if all agents are attached
+                # --- Update agent heading ---
+                self.agent_theta[i] = self._normalize_angle(x_next[6])
 
-        # if sum(self.attached) == self.num_agents:
-        #     self.box_pos, self.box_vel, self.box_theta, self.box_omega = self._box_dynamics(
-        #         self.box_pos, self.box_vel, self.box_theta, self.box_omega,
-        #         total_force,total_torque  # dummy pos for compatibility
-        #     )
+                # --- Attach agent position to box ---
+                R = self.box_rotation_matrix
 
-        #     # Update attached agent positions
-        #     R_box = self.box_rotation_matrix
-        #     for i in range(self.num_agents):
-        #         if self.attached[i]:
-        #             self.agent_pos[i] = self.box_pos + R_box @ self.agent_attachment_dis[i]
-
-        #     dist_to_goal = np.linalg.norm(self.box_pos - self.goal)
-        #     reward += 1.0 / (1.0 + dist_to_goal)
-        #     reward += -0.01 * abs(self.box_omega)
-
-        #     if dist_to_goal < 1.0:
-        #         done = True
-        #         self.goal_reached = True
-
-        #     corners, _ = self.box_corners_and_midpoints
-        #     for i in corners:
-        #         if i[0] < 0 or i[0] > self.env_size or i[1] < 0 or i[1] > self.env_size:
-        #             reward = -self.terminal_reward / 10
-        #             done = True
-
+                self.agent_pos[i] =self.box_pos + R @ r_local
+        
         if self.step_count >= self.max_steps:
             done = True
 
