@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class UnicyclePushBoxEnv:
-    def __init__(self, agent_radius=1, dt=0.1, num_agents =2,max_steps=500, box_size=(4.0, 2.0)):
+    def __init__(self, agent_radius=1, dt=0.1, num_agents =1,max_steps=500, box_size=(4.0, 2.0)):
         '''
         initializing the environment for two cooperative agents
         '''

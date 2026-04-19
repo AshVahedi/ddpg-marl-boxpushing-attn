@@ -102,17 +102,23 @@ def animate_from_state(X, goal, box_size, env_size, episode=0, interval=30):
 env = UnicyclePushBoxEnv()
 
 params = {
-    "m": 1.0,
-    "mu_a": 4.5,
-    "v_max": 5.0,
-    "env_size": 40.0,
-    "f_max": 8.0,
-    "omega_max": np.pi / 10,
-    "dt" :0.1
+    "m": env.agent_mass,
+    "mu_a": env.agent_friction,
+    "v_max": env.agent_vel_max.item(),
+    "env_size": env.env_size,
+    "f_max": env.agent_force_max.item(),
+    "omega_max": env.agent_omega_max.item(),
+    "dt" :env.dt,
+    "box_size" : env.box_size,
+    "box_friction_linear" : env.box_friction_linear,
+    "box_friction_rotary": env.box_friction_rotary,
+    "box_mass" : env.box_mass,
+    "box_inertia": env.box_inertia
 }
+
 max_step = 500 
 N=15
-ell = 2.5
+ell = 2.1
 
 weights_phase1 = {
     "w_p": 10.0,
@@ -160,6 +166,36 @@ while  not box_reached and step <=max_step:
                                 weights_phase1,
                                 params)
     p_ref = _compute_p_ref(env.box_pos,env.goal,ell)
+    u_apply = u[0]
+    states, done, goal_reached, box_reached = env.step(u_apply)
+    
+    s.append(states.copy()) 
+    u_prev = u_apply
+    step +=1
+
+N =40
+u_prev = np.array([0,0],dtype=np.float32)
+r_local = env.agent_attachment_dis[0]
+
+while not done:
+    x0 = np.array([
+        states[4],   # x_b
+        states[5],   # y_b
+        states[6],   # theta_b
+        states[7],   # vbx
+        states[8],   # vby
+        states[9],   # omega_b
+        states[2]    # theta_a
+    ])
+
+    u ,res =  solve_phase2_nmpc(x0,
+                                goal_pos,
+                                u_prev,
+                                N,
+                                params["dt"],
+                                weights_phase2,
+                                params,
+                                r_local)
     u_apply = u[0]
     states, done, goal_reached, box_reached = env.step(u_apply)
     

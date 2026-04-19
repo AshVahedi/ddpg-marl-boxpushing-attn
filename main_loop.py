@@ -33,13 +33,13 @@ set_seed(44)  # or any fixed integer
 
 gamma = 0.99
 tau = 0.008
-lr=0.0002
-buffer_capacity = 10000
-sigma = 0.8; # noise generator sample
+lr=0.0001
+buffer_capacity = 20000
+sigma = 0.85; # noise generator sample
 
 
 agent_radius = 1 # initiate agent s radius "IT MUST BE 1"
-num_agents = 2
+num_agents = 1
 agent_state_dim = 3
 box_dim =3
 agent_action_dim = 2

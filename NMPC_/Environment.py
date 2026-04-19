@@ -47,12 +47,13 @@ class UnicyclePushBoxEnv:
         self.agent_radius = agent_radius
         self.box_size = np.array(box_size)
         self.env_size = 40.0
-        self.goal = np.array([35.0, 15.0])
+        self.goal = np.array([35.0, 35.0])
 
         self.agent_mass = 1.0
         self.agent_friction = 4.5
         self.agent_force_max =np.array([8.0],dtype=np.float32)
         self.agent_omega_max = np.array([np.pi / 10],dtype=np.float32)
+        self.agent_vel_max = np.array([5.0],dtype=np.float32)
 
         self.box_friction_linear = 6.0
         self.box_friction_rotary = 9.8
@@ -149,8 +150,8 @@ class UnicyclePushBoxEnv:
     - Velocities are reset to zero.
     - This method prepares the system for a new episode.
         """
-        self.agent_pos = [np.random.uniform(2.0, 10.0, size=2) for _ in range(self.num_agents)]
-        self.agent_theta = [np.random.uniform(0, 8*np.pi/10) for _ in range(self.num_agents)]
+        self.agent_pos = [np.random.uniform(6.0, 7.0, size=2) for _ in range(self.num_agents)]
+        self.agent_theta = [np.random.uniform(0, np.pi/10) for _ in range(self.num_agents)]
         self.agent_vel = np.zeros(self.num_agents)
         self.box_pos = np.array([20.0, 20.0])
         self.box_theta = np.random.uniform(-np.pi, np.pi)
@@ -273,6 +274,7 @@ class UnicyclePushBoxEnv:
         return min(dists)
 
     def step(self, actions):  # actions is a flat array [f1, w1, f2, w2, ...]
+
         for i in range(self.num_agents):
             if self.mode == "RL":
                 force = actions[2*i] * self.agent_force_max + self.agent_force_offset
@@ -284,14 +286,7 @@ class UnicyclePushBoxEnv:
             else:  # NMPC
                 force = np.clip(actions[2*i+1], -self.agent_omega_max, self.agent_omega_max)
         self.step_count += 1
-        reward = 0.0
         done = False
-
-        # Store all force vectors and torque contributions
-        total_force = np.zeros(2)
-        total_torque = 0.0
-
-        R_box = self.box_rotation_matrix
 
         for i in range(self.num_agents):
             if self.mode == "RL":
@@ -320,7 +315,7 @@ class UnicyclePushBoxEnv:
                 if  not self.box_reached[i] and min_dist < self.contact_threshold:
                     self.attached[i] = 1
                     self.box_reached[i] = True
-                    self.agent_attachment_dis[i] = self.agent_pos[i] - self.box_pos
+                    self.agent_attachment_dis[i] =  self.box_pos -self.agent_pos[i] 
                     # --- Attachment vector (fixed) ---
                     r_local = self.agent_attachment_dis[i]
                     
@@ -342,9 +337,7 @@ class UnicyclePushBoxEnv:
                 # --- Control ---
                 u = np.array([force, omega])
                 
-                # --- Attachment vector (fixed) ---
                 r_local = self.agent_attachment_dis[i]
-
                 # --- RK4 update ---
                 x_next = self._rk4_step_phase2(x, u, r_local)
 
@@ -360,9 +353,11 @@ class UnicyclePushBoxEnv:
                 # --- Attach agent position to box ---
                 R = self.box_rotation_matrix
 
-                self.agent_pos[i] =self.box_pos + R @ r_local
-        
-        if self.step_count >= self.max_steps:
+                self.agent_pos[i] =self.box_pos - R @ r_local
+
+        goal_reached = True if np.linalg.norm(self.box_center-self.goal) <1 else False
+
+        if self.step_count >= self.max_steps or goal_reached:
             done = True
 
         return self.get_full_state(), done, self.goal_reached, self.box_reached[0]

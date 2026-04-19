@@ -5,6 +5,11 @@ import numpy as np
 def _wrap_to_pi(theta):
     return (theta + np.pi) % (2 * np.pi) - np.pi
 
+def _box_rotation_matrix(box_theta):
+    return np.array([
+        [np.cos(box_theta), -np.sin(box_theta)],
+        [np.sin(box_theta),  np.cos(box_theta)]])
+
 def _dynamics(x, u, params):
     m = params["m"]
     mu_a = params["mu_a"]
@@ -48,7 +53,83 @@ def _compute_theta_ref(box_pos, goal_pos):
 
     e_bg = goal_pos -box_pos
     return np.arctan2(e_bg[1], e_bg[0])
+
+def _box_dynamics( x, u, params, r_local):
+    """
+    x = [x_b, y_b, theta_b, vbx, vby, omega_b, theta_a]
+    u = [f, omega_a]
+    """
+    box_size=params["box_size"]
+    box_friction_linear = params["box_friction_linear"]
+    box_friction_rotary = params["box_friction_rotary"]
+    box_mass = params["box_mass"]
+    box_inertia = params["box_inertia"]
+
+    xb, yb, theta_b, vbx, vby, omega_b, theta_a = x
+    f, omega_a = u
+
+
+    # --- Force direction ---
+    Fx = f * np.cos(theta_a)
+    Fy = f * np.sin(theta_a)
+
+    # --- Rotate attachment vector ---
+    R = _box_rotation_matrix(theta_b)
+
+    r = R @ r_local
+
+    # --- Torque ---
+    torque = r[0] * Fy - r[1] * Fx
+
+    # --- Dynamics ---
+    dx_b = vbx
+    dy_b = vby
+    dtheta_b = omega_b
+
+    dvbx = (Fx - box_friction_linear * vbx) / box_mass
+    dvby = (Fy - box_friction_linear * vby) / box_mass
     
+    domega_b = (torque - box_friction_rotary * omega_b) / box_inertia
+
+    dtheta_a = omega_a
+
+    return np.array([
+        dx_b, dy_b, dtheta_b,
+        dvbx.item(), dvby.item(), domega_b.item(),
+        dtheta_a.item()
+    ])
+
+def _rk4_step_phase2( x, u, dt,params, r_local):
+        """
+        RK4 discretization for Phase 2
+        """
+
+        dt = dt
+
+        k1 = _box_dynamics(x, u, params, r_local)
+        k2 = _box_dynamics(x + 0.5 * dt * k1, u, params, r_local)
+        k3 = _box_dynamics(x + 0.5 * dt * k2, u, params, r_local)
+        k4 = _box_dynamics(x + dt * k3, u, params, r_local)
+
+        x_next = x + (dt / 6.0) * (k1 + 2*k2 + 2*k3 + k4)
+
+        # --- wrap angles ---
+        x_next[2] = _wrap_to_pi(x_next[2])   # box angle
+        x_next[6] = _wrap_to_pi(x_next[6])   # agent heading
+
+        # --- velocity clamp ---
+        v_max = 5.0  
+        x_next[3] = np.clip(x_next[3], -v_max, v_max)
+        x_next[4] = np.clip(x_next[4], -v_max, v_max)
+
+        # --- angular clamp (optional) ---
+        x_next[5] = np.clip(x_next[5], -10.0, 10.0)
+
+        # --- workspace clamp ---
+        x_next[0:2] = np.clip(x_next[0:2], 0.0, 40.0)
+
+        return x_next
+
 def phase1_cost(U_flat, x0, box_pos, goal_pos, u_prev, N, dt, ell, weights, params):
     
     J_pos = 0.0
@@ -130,7 +211,7 @@ def phase1_cost(U_flat, x0, box_pos, goal_pos, u_prev, N, dt, ell, weights, para
     )
 
     return J
-
+    
 def phase2_cost(U_flat, x0, goal, u_prev, N, dt, weights, params, r_local):
     """
     Phase 2 NMPC cost (pushing)
@@ -165,7 +246,7 @@ def phase2_cost(U_flat, x0, goal, u_prev, N, dt, weights, params, r_local):
         J += weights["w_domega"] * (du[1]**2)
 
         # --- rollout ---
-        x = rk4_step_phase2(x, u, dt, params, r_local)
+        x = _rk4_step_phase2(x, u, dt,params, r_local)
 
         u_prev = u
 
